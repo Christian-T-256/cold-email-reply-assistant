@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reply Review</title>
+  <style>
+    :root {
+      --ink: #18211d;
+      --muted: #68716d;
+      --paper: #f4f1e9;
+      --panel: #fffdf7;
+      --line: #ddd8cc;
+      --green: #174c3c;
+      --green-soft: #e2eee7;
+      --amber: #9a5c0d;
+      --amber-soft: #fff1d7;
+      --red: #9a342c;
+      --red-soft: #fae8e5;
+      --shadow: 0 18px 55px rgba(34, 45, 39, .09);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(225, 234, 223, .9), transparent 30%),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+    header {
+      padding: 22px 30px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      background: rgba(244, 241, 233, .86);
+      backdrop-filter: blur(12px);
+    }
+    .eyebrow { color: var(--green); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 4px 0 0; font-family: Georgia, serif; font-size: clamp(25px, 3vw, 38px); font-weight: 500; letter-spacing: -.025em; }
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .mode { padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 12px; background: var(--panel); }
+    .layout { min-height: 0; display: grid; grid-template-columns: minmax(290px, 390px) minmax(0, 1fr); }
+    aside { min-height: 0; overflow-y: auto; border-right: 1px solid var(--line); padding: 18px; }
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .metric { background: rgba(255, 253, 247, .72); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+    .metric b { display: block; font: 600 22px Georgia, serif; }
+    .metric span { color: var(--muted); font-size: 11px; }
+    .card-row { width: 100%; text-align: left; border: 1px solid transparent; border-radius: 13px; padding: 14px; margin-bottom: 8px; background: transparent; color: inherit; }
+    .card-row:hover { background: rgba(255, 253, 247, .65); border-color: var(--line); }
+    .card-row.selected { background: var(--panel); border-color: #a9b8af; box-shadow: 0 7px 22px rgba(34, 45, 39, .06); }
+    .row-top, .row-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .person { font-weight: 760; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .company, .preview { color: var(--muted); font-size: 12px; }
+    .preview { margin: 8px 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pill { display: inline-flex; align-items: center; padding: 4px 7px; border-radius: 999px; background: #ebe8df; color: #505954; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .pill.pending { background: var(--green-soft); color: var(--green); }
+    .pill.sent { background: #e5edf8; color: #31557c; }
+    .pill.suppressed, .pill.needs_verification { background: var(--red-soft); color: var(--red); }
+    main { min-height: 0; overflow-y: auto; padding: clamp(22px, 4vw, 54px); }
+    .detail { max-width: 820px; margin: 0 auto; }
+    .empty { color: var(--muted); border: 1px dashed #bdb7aa; border-radius: 18px; padding: 48px; text-align: center; }
+    .detail-head { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    h2 { margin: 0; font-family: Georgia, serif; font-size: clamp(27px, 4vw, 44px); font-weight: 500; letter-spacing: -.025em; }
+    .sub { margin-top: 6px; color: var(--muted); }
+    .section { background: var(--panel); border: 1px solid var(--line); border-radius: 17px; padding: 20px; margin-bottom: 14px; box-shadow: var(--shadow); }
+    .label { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; margin-bottom: 9px; }
+    .message { white-space: pre-wrap; line-height: 1.62; }
+    .point { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--green); font-size: 14px; }
+    textarea { width: 100%; min-height: 190px; resize: vertical; border: 1px solid #b8c3bd; border-radius: 11px; background: #fbfaf5; padding: 14px; line-height: 1.6; color: var(--ink); outline: none; }
+    textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(23, 76, 60, .10); }
+    .actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
+    .btn { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: var(--panel); color: var(--ink); font-weight: 730; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary { background: var(--green); border-color: var(--green); color: white; }
+    .btn.danger { color: var(--red); }
+    .btn.small { padding: 8px 11px; font-size: 12px; }
+    .btn:disabled { opacity: .5; cursor: wait; transform: none; }
+    .attempt { border-left: 3px solid var(--line); padding: 2px 0 2px 14px; margin: 12px 0; }
+    .attempt.blocked { border-color: var(--amber); }
+    .attempt.accepted { border-color: var(--green); }
+    .attempt-head { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 760; }
+    .attempt-copy { white-space: pre-wrap; color: var(--muted); font-size: 13px; margin-top: 8px; line-height: 1.48; }
+    .violation { display: inline-block; margin: 7px 5px 0 0; padding: 4px 7px; border-radius: 6px; color: var(--amber); background: var(--amber-soft); font-size: 11px; }
+    .notice { border-radius: 11px; padding: 11px 13px; margin-bottom: 14px; background: var(--green-soft); color: var(--green); font-size: 13px; }
+    .notice.error { color: var(--red); background: var(--red-soft); }
+    .notice.warn { color: var(--amber); background: var(--amber-soft); }
+    @media (max-width: 760px) {
+      header { padding: 16px 18px; align-items: center; }
+      .layout { grid-template-columns: 1fr; }
+      aside { border-right: 0; padding: 12px; }
+      main { display: none; position: fixed; inset: 0; z-index: 5; background: var(--paper); padding: 18px; }
+      body.detail-open main { display: block; }
+      body.detail-open aside, body.detail-open header { display: none; }
+      .mobile-back { display: inline-flex !important; margin-bottom: 16px; }
+      .section { box-shadow: none; }
+    }
+    .mobile-back { display: none; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="eyebrow">Approve before send</div>
+      <h1>Reply review</h1>
+    </div>
+    <div class="header-actions">
+      <span class="mode" id="mode">loading</span>
+      <button class="btn small" id="reset">Reset demo</button>
+    </div>
+  </header>
+  <div class="layout">
+    <aside>
+      <div class="summary" id="summary"></div>
+      <div id="list"></div>
+    </aside>
+    <main>
+      <button class="btn small mobile-back" id="back">Back to queue</button>
+      <div class="detail" id="detail"><div class="empty">Choose a reply to review.</div></div>
+    </main>
+  </div>
+</div>
+<script>
+const state = { cards: [], selected: null, busy: false };
+const esc = value => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+const statusLabel = value => value.replaceAll("_", " ");
+
+async function api(path, options = {}, retry = true) {
+  const token = localStorage.getItem("reply_assistant_token") || "";
+  const headers = {"Content-Type":"application/json", ...(options.headers || {})};
+  if (token) headers["X-App-Token"] = token;
+  const response = await fetch(path, {...options, headers});
+  if (response.status === 401 && retry) {
+    const entered = prompt("Enter APP_ACCESS_TOKEN");
+    if (entered) {
+      localStorage.setItem("reply_assistant_token", entered);
+      return api(path, options, false);
+    }
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error || data.detail || `Request failed (${response.status})`);
+    error.violations = data.violations || [];
+    throw error;
+  }
+  return data;
+}
+
+function renderSummary() {
+  const pending = state.cards.filter(card => card.status === "pending").length;
+  const sent = state.cards.filter(card => card.status === "sent").length;
+  const blocked = state.cards.reduce((count, card) => count + card.attempts.filter(item => !item.accepted).length, 0);
+  document.getElementById("summary").innerHTML = [
+    [pending, "to review"], [sent, "sent"], [blocked, "lint blocks"]
+  ].map(([n, label]) => `<div class="metric"><b>${n}</b><span>${label}</span></div>`).join("");
+}
+
+function renderList() {
+  const rank = {pending:0, needs_verification:1, suppressed:2, sent:3, skipped:4, sending:5};
+  const cards = [...state.cards].sort((a, b) => (rank[a.status] ?? 9) - (rank[b.status] ?? 9));
+  document.getElementById("list").innerHTML = cards.map(card => `
+    <button class="card-row ${state.selected === card.card_id ? "selected" : ""}" data-id="${esc(card.card_id)}">
+      <div class="row-top"><span class="person">${esc(card.inbound.from_name)}</span><span class="pill ${esc(card.status)}">${esc(statusLabel(card.status))}</span></div>
+      <div class="company">${esc(card.inbound.company)} · ${esc(statusLabel(card.category))}</div>
+      <div class="preview">${esc(card.inbound.body)}</div>
+      <div class="row-bottom"><span class="company">${card.attempts.length} draft attempt${card.attempts.length === 1 ? "" : "s"}</span><span class="company">${esc(card.confidence)}</span></div>
+    </button>`).join("");
+  document.querySelectorAll(".card-row").forEach(button => button.addEventListener("click", () => select(button.dataset.id)));
+}
+
+function renderDetail(notice = "", kind = "") {
+  const card = state.cards.find(item => item.card_id === state.selected);
+  const root = document.getElementById("detail");
+  if (!card) { root.innerHTML = '<div class="empty">Choose a reply to review.</div>'; return; }
+  const attempts = card.attempts.map(attempt => `
+    <div class="attempt ${attempt.accepted ? "accepted" : "blocked"}">
+      <div class="attempt-head"><span>Attempt ${attempt.number}</span><span>${attempt.accepted ? "Passed gate" : "Rejected by gate"}</span></div>
+      <div class="attempt-copy">${esc(attempt.draft)}</div>
+      ${attempt.violations.map(item => `<span class="violation">${esc(item)}</span>`).join("")}
+    </div>`).join("");
+  const editable = card.status === "pending";
+  const statusNote = card.status_note ? `<div class="notice ${card.status === "needs_verification" ? "error" : ""}">${esc(card.status_note)}</div>` : "";
+  root.innerHTML = `
+    <div class="detail-head">
+      <div><h2>${esc(card.inbound.from_name)}</h2><div class="sub">${esc(card.inbound.from_email)} · ${esc(card.inbound.company)}</div></div>
+      <span class="pill ${esc(card.status)}">${esc(statusLabel(card.status))}</span>
+    </div>
+    ${notice ? `<div class="notice ${kind}">${esc(notice)}</div>` : ""}
+    ${statusNote}
+    <section class="section">
+      <div class="label">Their reply</div>
+      <div class="message">${esc(card.inbound.body)}</div>
+      <div class="point"><b>One point:</b> ${esc(card.one_point)}</div>
+    </section>
+    ${card.draft ? `<section class="section">
+      <div class="label">Draft to review</div>
+      <textarea id="draft" ${editable ? "" : "disabled"}>${esc(card.draft)}</textarea>
+      ${editable ? `<div class="actions"><button class="btn" id="save">Save clean edit</button><button class="btn primary" id="approve">Approve and send</button><button class="btn danger" id="skip">Skip</button></div>` : ""}
+    </section>` : ""}
+    <section class="section">
+      <div class="label">Gate audit</div>
+      ${attempts || '<div class="message">No model draft was created for this category.</div>'}
+    </section>`;
+  if (editable) {
+    document.getElementById("save").onclick = saveDraft;
+    document.getElementById("approve").onclick = approve;
+    document.getElementById("skip").onclick = skip;
+  }
+}
+
+function select(id) {
+  state.selected = id;
+  document.body.classList.add("detail-open");
+  renderList();
+  renderDetail();
+}
+
+async function saveDraft() {
+  if (state.busy) return;
+  state.busy = true;
+  try {
+    const card = await api(`/api/cards/${state.selected}/edit`, {method:"POST", body:JSON.stringify({draft:document.getElementById("draft").value})});
+    replaceCard(card); renderDetail("Draft saved. The edit passed the same lint gate.");
+  } catch (error) { renderDetail(error.violations.length ? `Rejected: ${error.violations.join("; ")}` : error.message, "error"); }
+  finally { state.busy = false; }
+}
+
+async function approve() {
+  if (state.busy || !confirm("Send this exact draft through the email provider?")) return;
+  state.busy = true;
+  try {
+    const current = state.cards.find(item => item.card_id === state.selected);
+    const visibleDraft = document.getElementById("draft").value;
+    if (current && visibleDraft !== current.draft) {
+      replaceCard(await api(`/api/cards/${state.selected}/edit`, {method:"POST", body:JSON.stringify({draft:visibleDraft})}));
+    }
+    const result = await api(`/api/cards/${state.selected}/approve`, {method:"POST"});
+    replaceCard(result.card); renderAll("Sent once. A repeated approval returns the existing receipt.");
+  } catch (error) {
+    await load();
+    renderDetail(error.violations?.length ? `Rejected: ${error.violations.join("; ")}` : error.message, "error");
+  }
+  finally { state.busy = false; }
+}
+
+async function skip() {
+  if (state.busy) return;
+  state.busy = true;
+  try { replaceCard(await api(`/api/cards/${state.selected}/skip`, {method:"POST"})); renderAll("Skipped. Nothing was sent.", "warn"); }
+  catch (error) { renderDetail(error.message, "error"); }
+  finally { state.busy = false; }
+}
+
+function replaceCard(card) {
+  const index = state.cards.findIndex(item => item.card_id === card.card_id);
+  if (index >= 0) state.cards[index] = card; else state.cards.push(card);
+}
+
+function renderAll(notice = "", kind = "") { renderSummary(); renderList(); renderDetail(notice, kind); }
+
+async function load() {
+  const data = await api("/api/cards");
+  state.cards = data.cards;
+  document.getElementById("mode").textContent = `${data.mode} mode`;
+  document.getElementById("reset").style.display = data.mode === "demo" ? "inline-flex" : "none";
+  if (!state.selected && state.cards.length) state.selected = state.cards.find(card => card.status === "pending")?.card_id || state.cards[0].card_id;
+  renderAll();
+}
+
+document.getElementById("back").onclick = () => document.body.classList.remove("detail-open");
+document.getElementById("reset").onclick = async () => { await api("/api/demo/reset", {method:"POST"}); state.selected = null; await load(); };
+load().catch(error => { document.getElementById("detail").innerHTML = `<div class="notice error">${esc(error.message)}</div>`; });
+</script>
+</body>
+</html>
